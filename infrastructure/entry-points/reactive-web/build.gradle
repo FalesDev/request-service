@@ -7,4 +7,6 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation "org.mapstruct:mapstruct:$mapstructVersion"
     annotationProcessor "org.mapstruct:mapstruct-processor:$mapstructVersion"
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:$springdocOpenapiStarterWebfluxVersion")
+    testImplementation("org.springdoc:springdoc-openapi-starter-webflux-api:$springdocOpenapiStarterWebfluxVersion")
 }
