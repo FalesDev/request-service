@@ -1,6 +1,6 @@
 package co.com.pragma.r2dbc.adapter;
 
-import co.com.pragma.model.gateways.TransactionalGateway;
+import co.com.pragma.model.gateways.TransactionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class TransactionalAdapter implements TransactionalGateway {
+public class TransactionalAdapter implements TransactionManager {
 
     private final TransactionalOperator transactionalOperator;
 

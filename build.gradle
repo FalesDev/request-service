@@ -8,6 +8,7 @@ buildscript {
         lombokVersion = '1.18.38'
         mapstructVersion = '1.6.3'
         springdocOpenapiStarterWebfluxVersion = '2.8.11'
+        slf4jVersion = '2.0.17'
 	}
 }
 

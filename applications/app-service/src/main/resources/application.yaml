@@ -11,6 +11,9 @@ spring:
       path: "/h2"
   profiles:
     include: null
+logging:
+  level:
+    co.com.pragma: trace
 management:
   endpoints:
     web:
