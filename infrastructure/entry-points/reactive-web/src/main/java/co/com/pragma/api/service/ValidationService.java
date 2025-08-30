@@ -21,9 +21,12 @@ public class ValidationService {
                                 ? Mono.just(obj)
                                 : Mono.error(new ValidationException(
                                 violations.stream()
-                                        .collect(Collectors.toMap(
+                                        .collect(Collectors.groupingBy(
                                                 v -> v.getPropertyPath().toString(),
-                                                ConstraintViolation::getMessage
+                                                Collectors.mapping(
+                                                        ConstraintViolation::getMessage,
+                                                        Collectors.toList()
+                                                )
                                         ))
                         ))
                 );

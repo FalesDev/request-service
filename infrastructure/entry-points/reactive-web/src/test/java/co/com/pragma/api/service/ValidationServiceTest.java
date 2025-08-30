@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
+import java.util.List;
 import java.util.Map;
 
 public class ValidationServiceTest {
@@ -52,7 +53,7 @@ public class ValidationServiceTest {
                 .expectErrorMatches(throwable ->
                         throwable instanceof ValidationException &&
                                 ((ValidationException) throwable).getErrors()
-                                        .equals(Map.of("name", "name cannot be blank"))
+                                        .equals(Map.of("name", List.of("name cannot be blank")))
                 )
                 .verify();
     }
