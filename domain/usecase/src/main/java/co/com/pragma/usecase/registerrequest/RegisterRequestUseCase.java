@@ -4,6 +4,7 @@ import co.com.pragma.model.application.Application;
 import co.com.pragma.model.application.gateways.ApplicationRepository;
 import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.exception.InvalidAmountException;
+import co.com.pragma.model.gateways.AuthValidationGateway;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.TransactionManager;
 import co.com.pragma.model.loantype.LoanType;
@@ -22,23 +23,28 @@ public class RegisterRequestUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final StatusRepository statusRepository;
     private final TransactionManager transactionManager;
+    private final AuthValidationGateway authValidationGateway;
     private final CustomLogger customLogger;
 
-    public Mono<Application> registerApplication(Application application) {
-        customLogger.trace("Starting request registration for email: {}", application.getEmail());
+    public Mono<Application> registerApplication(Application application, String token) {
+        customLogger.trace("Starting request registration for idDocument: {}", application.getIdDocument());
 
-        return transactionManager.executeInTransaction(
-                findLoanType(application.getIdLoanType())
-                        .flatMap(loanType -> validateAmount(application.getAmount(), loanType)
-                                .thenReturn(loanType))
-                        .then(findPendingReviewStatus())
-                        .map(status -> prepareApplication(application, status))
-                        .flatMap(applicationRepository::save)
-                        .doOnSuccess(savedApp ->
-                                customLogger.trace("Application registered successfully for email: {}", savedApp.getEmail()))
-                        .doOnError(error ->
-                                customLogger.trace("Application registration failed for {}: {}", application.getEmail(), error.getMessage()))
-        );
+        return authValidationGateway.validateClientUser(application.getIdDocument(), token)
+                .flatMap(user -> {
+                    application.setEmail(user.getEmail().toLowerCase());
+                    return transactionManager.executeInTransaction(
+                            findLoanType(application.getIdLoanType())
+                                    .flatMap(loanType -> validateAmount(application.getAmount(), loanType)
+                                            .thenReturn(loanType))
+                                    .then(findPendingReviewStatus())
+                                    .map(status -> prepareApplication(application, status))
+                                    .flatMap(applicationRepository::save)
+                                    .doOnSuccess(savedApp ->
+                                            customLogger.trace("Application registered successfully for email: {}", savedApp.getEmail()))
+                                    .doOnError(error ->
+                                            customLogger.trace("Application registration failed for {}: {}", application.getIdDocument(), error.getMessage()))
+                    );
+                });
     }
 
     private Mono<LoanType> findLoanType(UUID idLoanType) {
@@ -83,7 +89,6 @@ public class RegisterRequestUseCase {
     private Application prepareApplication(Application application, Status status) {
         customLogger.trace("Preparing application for saving with status 'Pending Review'");
         application.setIdStatus(status.getId());
-        application.setEmail(application.getEmail().toLowerCase());
         return application;
     }
 }

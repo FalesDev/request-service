@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
 import java.util.UUID;
 
@@ -18,14 +17,6 @@ public record RegisterApplicationRequestDto(
         @NotNull(message = "Term is required")
         @Min(value = 1, message = "Term must be at least 1 month")
         Integer term,
-
-        @Schema(description = "Applicant's email address", example = "fabricio@gmail.com")
-        @Pattern(
-                regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
-                message = "Email should be valid"
-        )
-        @NotBlank(message = "Email is required")
-        String email,
 
         @Schema(description = "Applicant's identification document", example = "12345678")
         @NotBlank(message = "IdDocument is required")

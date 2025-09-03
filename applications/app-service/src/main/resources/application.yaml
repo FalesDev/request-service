@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   application:
     name: "request-service"
@@ -26,9 +26,9 @@ management:
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 
-routes:
-  paths:
-    requests: "/api/v1/requests"
+services:
+  auth:
+    url: "http://localhost:8080"
 
 adapters:
   r2dbc:
@@ -38,3 +38,6 @@ adapters:
     schema: "public"
     username: "admin"
     password: "admin"
+
+jwt:
+  secret: rXm5xuejgjmoMoOaaP5G5EUl6Wl+nZxjHLMx2n8IPHE=

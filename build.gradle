@@ -9,6 +9,7 @@ buildscript {
         mapstructVersion = '1.6.3'
         springdocOpenapiStarterWebfluxVersion = '2.8.11'
         slf4jVersion = '2.0.17'
+        jjwtVersion = '0.13.0'
 	}
 }
 

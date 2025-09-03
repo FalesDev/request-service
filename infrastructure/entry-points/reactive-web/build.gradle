@@ -9,4 +9,5 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:$mapstructVersion"
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:$springdocOpenapiStarterWebfluxVersion")
     testImplementation("org.springdoc:springdoc-openapi-starter-webflux-api:$springdocOpenapiStarterWebfluxVersion")
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }

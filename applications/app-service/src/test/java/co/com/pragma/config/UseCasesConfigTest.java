@@ -1,6 +1,7 @@
 package co.com.pragma.config;
 
 import co.com.pragma.model.application.gateways.ApplicationRepository;
+import co.com.pragma.model.gateways.AuthValidationGateway;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.TransactionManager;
 import co.com.pragma.model.loantype.gateways.LoanTypeRepository;
@@ -40,6 +41,8 @@ public class UseCasesConfigTest {
         StatusRepository passwordEncoder() { return mock(StatusRepository.class); }
         @Bean
         TransactionManager transactionManager() { return mock(TransactionManager.class); }
+        @Bean
+        AuthValidationGateway authValidationGateway() { return mock(AuthValidationGateway.class); }
         @Bean
         CustomLogger customLogger() { return mock(CustomLogger.class); }
     }

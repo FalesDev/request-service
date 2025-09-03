@@ -1,6 +1,7 @@
 package co.com.pragma.config;
 
 import co.com.pragma.model.application.gateways.ApplicationRepository;
+import co.com.pragma.model.gateways.AuthValidationGateway;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.TransactionManager;
 import co.com.pragma.model.loantype.gateways.LoanTypeRepository;
@@ -25,8 +26,10 @@ public class UseCasesConfig {
             LoanTypeRepository loanTypeRepository,
             StatusRepository statusRepository,
             TransactionManager transactionManager,
+            AuthValidationGateway  authValidationGateway,
             CustomLogger customLogger
     ) {
-        return new RegisterRequestUseCase(applicationRepository, loanTypeRepository, statusRepository, transactionManager,customLogger);
+        return new RegisterRequestUseCase(applicationRepository, loanTypeRepository, statusRepository,
+                transactionManager, authValidationGateway, customLogger);
     }
 }

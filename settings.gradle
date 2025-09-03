@@ -26,3 +26,7 @@ include ':reactive-web'
 project(':reactive-web').projectDir = file('./infrastructure/entry-points/reactive-web')
 include ':logger'
 project(':logger').projectDir = file('./infrastructure/helpers/logger')
+include ':webclient'
+project(':webclient').projectDir = file('./infrastructure/driven-adapters/webclient')
+include ':security'
+project(':security').projectDir = file('./infrastructure/driven-adapters/security')

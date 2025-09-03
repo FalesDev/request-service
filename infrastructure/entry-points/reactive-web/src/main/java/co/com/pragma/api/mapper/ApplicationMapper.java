@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface ApplicationMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "idStatus", ignore = true)
+    @Mapping(target = "email", ignore = true)
     Application toEntity(RegisterApplicationRequestDto registerApplicationRequestDto);
 
     ApplicationDto toResponse(Application application);
