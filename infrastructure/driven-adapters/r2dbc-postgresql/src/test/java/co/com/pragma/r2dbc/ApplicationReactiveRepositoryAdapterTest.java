@@ -191,4 +191,94 @@ class ApplicationReactiveRepositoryAdapterTest {
                         && throwable.getMessage().equals("Count error"))
                 .verify();
     }
+
+    @Test
+    @DisplayName("Should handle DESC sort direction correctly")
+    void findByIdStatusInShouldHandleDescSortDirection() {
+        List<UUID> statusIds = List.of(UUID.randomUUID());
+        List<ApplicationEntity> entityList = List.of(entity);
+        long totalCount = 1L;
+
+        CustomPageable customPageable = CustomPageable.builder()
+                .page(0)
+                .size(10)
+                .sortBy("id")
+                .sortDirection("desc")
+                .build();
+
+        Pageable pageable = PageRequest.of(customPageable.getPage(), customPageable.getSize(),
+                Sort.by(Sort.Direction.DESC, customPageable.getSortBy()));
+
+        when(repository.findByIdStatusIn(eq(statusIds), eq(pageable)))
+                .thenReturn(Flux.fromIterable(entityList));
+        when(repository.countByIdStatusIn(statusIds)).thenReturn(Mono.just(totalCount));
+        when(mapper.map(entity, Application.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findByIdStatusIn(statusIds, customPageable))
+                .expectNextMatches(customPage ->
+                        customPage.getContent().size() == 1 &&
+                                customPage.getTotalElements() == totalCount)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findByIdStatusIn fails")
+    void findByIdStatusInShouldPropagateRepositoryError() {
+        List<UUID> statusIds = List.of(UUID.randomUUID());
+        RuntimeException error = new RuntimeException("DB find error");
+
+        Pageable pageable = PageRequest.of(customPageable.getPage(), customPageable.getSize(),
+                Sort.by(Sort.Direction.ASC, customPageable.getSortBy()));
+
+        when(repository.findByIdStatusIn(eq(statusIds), eq(pageable)))
+                .thenReturn(Flux.error(error));
+        when(repository.countByIdStatusIn(statusIds)).thenReturn(Mono.just(0L));
+
+        StepVerifier.create(repositoryAdapter.findByIdStatusIn(statusIds, customPageable))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().equals("DB find error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findByIdUserAndIdStatus fails")
+    void findByIdUserAndIdStatusShouldPropagateRepositoryError() {
+        UUID userId = UUID.randomUUID();
+        UUID statusId = UUID.randomUUID();
+        RuntimeException error = new RuntimeException("DB findByUser error");
+
+        when(repository.findByIdUserAndIdStatus(userId, statusId))
+                .thenReturn(Flux.error(error));
+
+        StepVerifier.create(repositoryAdapter.findByIdUserAndIdStatus(userId, statusId))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().equals("DB findByUser error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should correctly calculate hasNext and totalPages for multiple pages")
+    void findByIdStatusInMultiplePages() {
+        List<UUID> statusIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        List<ApplicationEntity> entityList = List.of(entity, entity, entity);
+        long totalCount = 15L;
+
+        Pageable pageable = PageRequest.of(customPageable.getPage(), customPageable.getSize(),
+                Sort.by(Sort.Direction.ASC, customPageable.getSortBy()));
+
+        when(repository.findByIdStatusIn(eq(statusIds), eq(pageable)))
+                .thenReturn(Flux.fromIterable(entityList));
+        when(repository.countByIdStatusIn(statusIds)).thenReturn(Mono.just(totalCount));
+        when(mapper.map(entity, Application.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findByIdStatusIn(statusIds, customPageable))
+                .expectNextMatches(customPage -> {
+                    int expectedTotalPages = (int) Math.ceil((double) totalCount / customPageable.getSize());
+                    return customPage.getContent().size() == 3 &&
+                            customPage.getTotalElements() == totalCount &&
+                            customPage.getTotalPages() == expectedTotalPages &&
+                            customPage.isHasNext() == (customPageable.getPage() < expectedTotalPages - 1);
+                })
+                .verifyComplete();
+    }
 }

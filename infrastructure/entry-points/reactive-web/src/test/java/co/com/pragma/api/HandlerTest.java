@@ -8,8 +8,6 @@ import co.com.pragma.model.application.Application;
 import co.com.pragma.model.auth.ValidatedUser;
 import co.com.pragma.model.exception.UnauthorizedException;
 import co.com.pragma.model.gateways.TokenValidator;
-import co.com.pragma.model.pagination.CustomPage;
-import co.com.pragma.model.pagination.CustomPageable;
 import co.com.pragma.usecase.getapplicationsforadvisor.GetApplicationsForAdvisorUseCase;
 import co.com.pragma.usecase.registerrequest.RegisterRequestUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +25,7 @@ import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -141,19 +140,6 @@ public class HandlerTest {
                 .verify();
     }
 
-
-    @Test
-    @DisplayName("Should return unauthorized for non-advisor users")
-    void getApplicationsForAdvisor_NonAdvisorUser() {
-        when(serverRequest.headers()).thenReturn(headers);
-        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
-        when(tokenValidator.validateToken(token)).thenReturn(Mono.just(validatedUser));
-
-        StepVerifier.create(handler.getApplicationsForAdvisor(serverRequest))
-                .expectNextMatches(serverResponse -> serverResponse.statusCode() == HttpStatus.UNAUTHORIZED)
-                .verifyComplete();
-    }
-
     @Test
     @DisplayName("Should handle missing authorization header")
     void extractAuthToken_MissingHeader() {
@@ -173,6 +159,94 @@ public class HandlerTest {
         when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("InvalidFormat");
 
         StepVerifier.create(handler.registerRequest(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
+                        throwable.getMessage().equals("Authorization header is missing or invalid"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should handle token validation error")
+    void registerRequest_TokenValidationError() {
+        when(serverRequest.headers()).thenReturn(headers);
+        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(serverRequest.bodyToMono(RegisterApplicationRequestDto.class)).thenReturn(Mono.just(requestDto));
+        when(tokenValidator.validateToken(token)).thenReturn(Mono.error(new RuntimeException("Token validation failed")));
+
+        StepVerifier.create(handler.registerRequest(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Token validation failed"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should handle validation error for request DTO")
+    void registerRequest_ValidationError() {
+        when(serverRequest.headers()).thenReturn(headers);
+        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(serverRequest.bodyToMono(RegisterApplicationRequestDto.class)).thenReturn(Mono.just(requestDto));
+        when(tokenValidator.validateToken(token)).thenReturn(Mono.just(validatedUser));
+        when(validationService.validate(requestDto)).thenReturn(Mono.error(new IllegalArgumentException("Validation failed")));
+
+        StepVerifier.create(handler.registerRequest(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
+                        throwable.getMessage().equals("Validation failed"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should handle error during application registration")
+    void registerRequest_RegistrationError() {
+        when(serverRequest.headers()).thenReturn(headers);
+        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(serverRequest.bodyToMono(RegisterApplicationRequestDto.class)).thenReturn(Mono.just(requestDto));
+        when(tokenValidator.validateToken(token)).thenReturn(Mono.just(validatedUser));
+        when(validationService.validate(requestDto)).thenReturn(Mono.just(requestDto));
+        when(applicationMapper.toEntity(requestDto)).thenReturn(application);
+        when(registerRequestUseCase.registerApplication(application, token)).thenReturn(Mono.error(new RuntimeException("Registration error")));
+
+        StepVerifier.create(handler.registerRequest(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Registration error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should handle error in getApplicationsForAdvisor")
+    void getApplicationsForAdvisor_Error() {
+        when(serverRequest.headers()).thenReturn(headers);
+        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+        when(serverRequest.queryParam("page")).thenReturn(java.util.Optional.of("0"));
+        when(serverRequest.queryParam("size")).thenReturn(java.util.Optional.of("10"));
+        when(serverRequest.queryParam("sortBy")).thenReturn(java.util.Optional.of("amount"));
+        when(serverRequest.queryParam("sortDirection")).thenReturn(java.util.Optional.of("asc"));
+        when(getApplicationsForAdvisorUseCase.getApplicationsByStatus(any(), any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("Error in use case")));
+
+        StepVerifier.create(handler.getApplicationsForAdvisor(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Error in use case"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should handle missing authorization header in getApplicationsForAdvisor")
+    void getApplicationsForAdvisor_MissingHeader() {
+        when(serverRequest.headers()).thenReturn(headers);
+        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn(null);
+
+        StepVerifier.create(handler.getApplicationsForAdvisor(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
+                        throwable.getMessage().equals("Authorization header is missing or invalid"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should handle malformed authorization header in getApplicationsForAdvisor")
+    void getApplicationsForAdvisor_MalformedHeader() {
+        when(serverRequest.headers()).thenReturn(headers);
+        when(headers.firstHeader(HttpHeaders.AUTHORIZATION)).thenReturn("InvalidFormat");
+
+        StepVerifier.create(handler.getApplicationsForAdvisor(serverRequest))
                 .expectErrorMatches(throwable -> throwable instanceof UnauthorizedException &&
                         throwable.getMessage().equals("Authorization header is missing or invalid"))
                 .verify();

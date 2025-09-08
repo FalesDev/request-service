@@ -5,6 +5,7 @@ import co.com.pragma.model.auth.ValidatedUser;
 import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.exception.UnauthorizedException;
 import co.com.pragma.webclient.dto.UserValidationRequest;
+import co.com.pragma.webclient.dto.UsersFoundRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -22,13 +23,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthServiceAdapterTest {
+class AuthServiceAdapterTest {
 
     private MockWebServer mockWebServer;
     private AuthServiceAdapter authServiceAdapter;
@@ -78,7 +79,6 @@ public class AuthServiceAdapterTest {
                                 validatedUser.getRole().equals(expectedUser.getRole()))
                 .verifyComplete();
 
-        // Verify request
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
         assertEquals("/api/v1/users/document", recordedRequest.getPath());
@@ -90,7 +90,7 @@ public class AuthServiceAdapterTest {
     }
 
     @Test
-    @DisplayName("validateClientUser should throw UnauthorizedException when response is 401 Unauthorized")
+    @DisplayName("validateClientUser should throw UnauthorizedException when response is 401")
     void validateClientUser_Unauthorized() {
         String idDocument = "12345678";
 
@@ -98,14 +98,14 @@ public class AuthServiceAdapterTest {
                 .setResponseCode(HttpStatus.UNAUTHORIZED.value()));
 
         StepVerifier.create(authServiceAdapter.validateClientUser(idDocument, token))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof UnauthorizedException &&
-                                throwable.getMessage().equals("Unauthorized: Invalid token"))
+                .expectErrorMatches(ex ->
+                        ex instanceof UnauthorizedException &&
+                                ex.getMessage().equals("Unauthorized: Invalid token"))
                 .verify();
     }
 
     @Test
-    @DisplayName("validateClientUser should throw EntityNotFoundException when response is 404 Not Found")
+    @DisplayName("validateClientUser should throw EntityNotFoundException when response is 404")
     void validateClientUser_NotFound() {
         String idDocument = "12345678";
 
@@ -113,71 +113,9 @@ public class AuthServiceAdapterTest {
                 .setResponseCode(HttpStatus.NOT_FOUND.value()));
 
         StepVerifier.create(authServiceAdapter.validateClientUser(idDocument, token))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof EntityNotFoundException &&
-                                throwable.getMessage().equals("User not found in auth service"))
-                .verify();
-    }
-
-    @Test
-    @DisplayName("foundClientUserById should return user when response is successful")
-    void foundClientUserById_Success() throws Exception {
-        UUID userId = UUID.randomUUID();
-        UserFound expectedUser = UserFound.builder()
-                .idUser(userId)
-                .email("test@example.com")
-                .firstName("John")
-                .lastName("Doe")
-                .baseSalary(3000.0)
-                .build();
-
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.OK.value())
-                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(objectMapper.writeValueAsString(expectedUser)));
-
-        StepVerifier.create(authServiceAdapter.foundClientUserById(userId, token))
-                .expectNextMatches(userFound ->
-                        userFound.getIdUser().equals(expectedUser.getIdUser()) &&
-                                userFound.getEmail().equals(expectedUser.getEmail()) &&
-                                userFound.getFirstName().equals(expectedUser.getFirstName()) &&
-                                userFound.getLastName().equals(expectedUser.getLastName()) &&
-                                Objects.equals(userFound.getBaseSalary(), expectedUser.getBaseSalary()))
-                .verifyComplete();
-
-        RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        assertEquals("GET", recordedRequest.getMethod());
-        assertEquals("/api/v1/users/" + userId, recordedRequest.getPath());
-        assertEquals("Bearer " + token, recordedRequest.getHeader(HttpHeaders.AUTHORIZATION));
-    }
-
-    @Test
-    @DisplayName("foundClientUserById should throw UnauthorizedException when response is 401 Unauthorized")
-    void foundClientUserById_Unauthorized() {
-        UUID userId = UUID.randomUUID();
-
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.UNAUTHORIZED.value()));
-
-        StepVerifier.create(authServiceAdapter.foundClientUserById(userId, token))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof UnauthorizedException &&
-                                throwable.getMessage().equals("Unauthorized: Invalid token"))
-                .verify();
-    }
-
-    @Test
-    @DisplayName("foundClientUserById should throw EntityNotFoundException when response is 404 Not Found")
-    void foundClientUserById_NotFound() {
-        UUID userId = UUID.randomUUID();
-
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.NOT_FOUND.value()));
-
-        StepVerifier.create(authServiceAdapter.foundClientUserById(userId, token))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof EntityNotFoundException &&
-                                throwable.getMessage().equals("User not found in auth service"))
+                .expectErrorMatches(ex ->
+                        ex instanceof EntityNotFoundException &&
+                                ex.getMessage().equals("User not found in auth service"))
                 .verify();
     }
 
@@ -194,15 +132,90 @@ public class AuthServiceAdapterTest {
                 .verify();
     }
 
+    // -------------------- foundClientByIds --------------------
+
     @Test
-    @DisplayName("foundClientUserById should complete without error when response is other 4xx")
-    void foundClientUserById_Other4xxError() {
+    @DisplayName("foundClientByIds should return users when response is successful")
+    void foundClientByIds_Success() throws Exception {
+        UUID userId1 = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
+
+        List<UserFound> expectedUsers = List.of(
+                UserFound.builder()
+                        .idUser(userId1)
+                        .email("john@example.com")
+                        .firstName("John")
+                        .lastName("Doe")
+                        .baseSalary(3000.0)
+                        .build(),
+                UserFound.builder()
+                        .idUser(userId2)
+                        .email("jane@example.com")
+                        .firstName("Jane")
+                        .lastName("Smith")
+                        .baseSalary(4000.0)
+                        .build()
+        );
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.OK.value())
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .setBody(objectMapper.writeValueAsString(expectedUsers)));
+
+        StepVerifier.create(authServiceAdapter.foundClientByIds(List.of(userId1, userId2), token))
+                .expectNextMatches(user -> expectedUsers.stream().anyMatch(u -> u.getIdUser().equals(user.getIdUser())))
+                .expectNextMatches(user -> expectedUsers.stream().anyMatch(u -> u.getIdUser().equals(user.getIdUser())))
+                .verifyComplete();
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertEquals("/api/v1/users/find", recordedRequest.getPath());
+        assertEquals("Bearer " + token, recordedRequest.getHeader(HttpHeaders.AUTHORIZATION));
+
+        UsersFoundRequest requestBody = objectMapper.readValue(
+                recordedRequest.getBody().readUtf8(), UsersFoundRequest.class);
+        assertEquals(2, requestBody.userIds().size());
+    }
+
+    @Test
+    @DisplayName("foundClientByIds should throw UnauthorizedException when response is 401")
+    void foundClientByIds_Unauthorized() {
+        UUID userId = UUID.randomUUID();
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.UNAUTHORIZED.value()));
+
+        StepVerifier.create(authServiceAdapter.foundClientByIds(List.of(userId), token))
+                .expectErrorMatches(ex ->
+                        ex instanceof UnauthorizedException &&
+                                ex.getMessage().equals("Unauthorized: Invalid token"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("foundClientByIds should throw EntityNotFoundException when response is 404")
+    void foundClientByIds_NotFound() {
+        UUID userId = UUID.randomUUID();
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(HttpStatus.NOT_FOUND.value()));
+
+        StepVerifier.create(authServiceAdapter.foundClientByIds(List.of(userId), token))
+                .expectErrorMatches(ex ->
+                        ex instanceof EntityNotFoundException &&
+                                ex.getMessage().equals("Users not found in auth service"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("foundClientByIds should complete without error when response is other 4xx")
+    void foundClientByIds_Other4xxError() {
         UUID userId = UUID.randomUUID();
 
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(HttpStatus.BAD_REQUEST.value()));
 
-        StepVerifier.create(authServiceAdapter.foundClientUserById(userId, token))
+        StepVerifier.create(authServiceAdapter.foundClientByIds(List.of(userId), token))
                 .expectComplete()
                 .verify();
     }

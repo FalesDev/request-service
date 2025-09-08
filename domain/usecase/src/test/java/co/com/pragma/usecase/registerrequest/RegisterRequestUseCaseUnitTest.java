@@ -24,6 +24,7 @@ import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -159,6 +160,50 @@ public class RegisterRequestUseCaseUnitTest {
         verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
         verify(loanTypeRepository).findById(testApplication.getIdLoanType());
         verify(statusRepository).findByName("Pending Review");
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw InvalidAmountException when amount is below minimum")
+    void registerApplicationAmountBelowMin() {
+        testApplication.setAmount(5000.0);
+
+        when(authValidationGateway.validateClientUser(testApplication.getIdDocument(), token))
+                .thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(testApplication.getIdLoanType())).thenReturn(Mono.just(loanType));
+        when(statusRepository.findByName("Pending Review")).thenReturn(Mono.just(status));
+
+        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication, token))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidAmountException.class);
+                    assertThat(error.getMessage()).contains("outside the valid range");
+                })
+                .verify();
+
+        verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
+        verify(loanTypeRepository).findById(testApplication.getIdLoanType());
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw InvalidAmountException when amount is above maximum")
+    void registerApplicationAmountAboveMax() {
+        testApplication.setAmount(60000.0);
+
+        when(authValidationGateway.validateClientUser(testApplication.getIdDocument(), token))
+                .thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(testApplication.getIdLoanType())).thenReturn(Mono.just(loanType));
+        when(statusRepository.findByName("Pending Review")).thenReturn(Mono.just(status));
+
+        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication, token))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidAmountException.class);
+                    assertThat(error.getMessage()).contains("outside the valid range");
+                })
+                .verify();
+
+        verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
+        verify(loanTypeRepository).findById(testApplication.getIdLoanType());
         verify(applicationRepository, never()).save(any());
     }
 }

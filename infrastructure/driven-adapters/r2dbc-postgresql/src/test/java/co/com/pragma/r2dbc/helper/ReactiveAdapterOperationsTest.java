@@ -98,6 +98,22 @@ class ReactiveAdapterOperationsTest {
                 .verifyComplete();
     }
 
+    @Test
+    void toEntityShouldReturnNullWhenDataIsNull() {
+        StepVerifier.create(Mono.justOrEmpty(operations.toEntity(null)))
+                .verifyComplete();
+    }
+
+    @Test
+    void saveDataShouldDelegateToRepository() {
+        DummyData data = new DummyData("1", "test");
+        when(repository.save(data)).thenReturn(Mono.just(data));
+
+        StepVerifier.create(operations.saveData(data))
+                .expectNext(data)
+                .verifyComplete();
+    }
+
     static class DummyEntity {
         private String id;
         private String name;
