@@ -11,6 +11,7 @@ public interface ApplicationMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "idStatus", ignore = true)
     @Mapping(target = "email", ignore = true)
+    @Mapping(target = "idUser", ignore = true)
     Application toEntity(RegisterApplicationRequestDto registerApplicationRequestDto);
 
     ApplicationDto toResponse(Application application);

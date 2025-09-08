@@ -48,12 +48,34 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/requests",
+                    method = RequestMethod.GET,
+                    beanClass = Handler.class,
+                    beanMethod = "getApplicationsForAdvisor",
+                    operation = @Operation(
+                            operationId = "getApplicationsForAdvisor",
+                            summary = "Get applications for advisor",
+                            tags = {"Request"},
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "List of applications retrieved successfully",
+                                            content = @Content(
+                                                    mediaType = "application/json",
+                                                    schema = @Schema(implementation = ApplicationDto.class)
+                                            )
+                                    )
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler,
                                                          GlobalExceptionHandler globalExceptionHandler) {
         return RouterFunctions.route()
                 .POST("/api/v1/requests", handler::registerRequest)
+                .GET("/api/v1/requests", handler::getApplicationsForAdvisor)
                 .filter(globalExceptionHandler)
                 .build();
     }

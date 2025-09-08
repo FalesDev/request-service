@@ -9,9 +9,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class ValidatedUser {
+public class UserFound {
     private UUID idUser;
+    private String firstName;
+    private String lastName;
     private String email;
     private String idDocument;
-    private String role;
+    private Double baseSalary;
 }

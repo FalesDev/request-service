@@ -4,7 +4,7 @@ import co.com.pragma.model.application.Application;
 import co.com.pragma.model.application.gateways.ApplicationRepository;
 import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.exception.InvalidAmountException;
-import co.com.pragma.model.gateways.AuthValidationGateway;
+import co.com.pragma.model.auth.gateway.AuthValidationGateway;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.TransactionManager;
 import co.com.pragma.model.loantype.LoanType;
@@ -32,6 +32,7 @@ public class RegisterRequestUseCase {
         return authValidationGateway.validateClientUser(application.getIdDocument(), token)
                 .flatMap(user -> {
                     application.setEmail(user.getEmail().toLowerCase());
+                    application.setIdUser(user.getIdUser());
                     return transactionManager.executeInTransaction(
                             findLoanType(application.getIdLoanType())
                                     .flatMap(loanType -> validateAmount(application.getAmount(), loanType)

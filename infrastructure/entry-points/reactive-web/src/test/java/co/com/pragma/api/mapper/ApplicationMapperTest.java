@@ -30,7 +30,6 @@ public class ApplicationMapperTest {
                 20000.0,
                 12,
                 "fabricio@example.com",
-                "77777777",
                 UUID.randomUUID()
         );
 
@@ -39,12 +38,12 @@ public class ApplicationMapperTest {
         assertNotNull(application);
         assertEquals(dto.amount(), application.getAmount());
         assertEquals(dto.term(), application.getTerm());
-        assertEquals(dto.email(), application.getEmail());
         assertEquals(dto.idDocument(), application.getIdDocument());
         assertEquals(dto.idLoanType(), application.getIdLoanType());
 
         assertNull(application.getId());
         assertNull(application.getIdStatus());
+        assertNull(application.getEmail());
     }
 
     @Test

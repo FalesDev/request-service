@@ -10,6 +10,7 @@ buildscript {
         springdocOpenapiStarterWebfluxVersion = '2.8.11'
         slf4jVersion = '2.0.17'
         jjwtVersion = '0.13.0'
+        mockWebServerVersion = '4.12.0'
 	}
 }
 

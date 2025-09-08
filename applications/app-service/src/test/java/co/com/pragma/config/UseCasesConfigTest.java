@@ -1,11 +1,12 @@
 package co.com.pragma.config;
 
 import co.com.pragma.model.application.gateways.ApplicationRepository;
-import co.com.pragma.model.gateways.AuthValidationGateway;
+import co.com.pragma.model.auth.gateway.AuthValidationGateway;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.TransactionManager;
 import co.com.pragma.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.model.status.gateways.StatusRepository;
+import co.com.pragma.usecase.getapplicationsforadvisor.GetApplicationsForAdvisorUseCase;
 import co.com.pragma.usecase.registerrequest.RegisterRequestUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 public class UseCasesConfigTest {
+
+    @Test
+    @DisplayName("Should register GetApplicationsForAdvisorUseCase bean in application context")
+    void testGetApplicationsForAdvisorUseCaseBeanExists() {
+        try (AnnotationConfigApplicationContext context =
+                     new AnnotationConfigApplicationContext(TestConfig.class)) {
+
+            GetApplicationsForAdvisorUseCase getApplicationsForAdvisorUseCase = context.getBean(GetApplicationsForAdvisorUseCase.class);
+            assertNotNull(getApplicationsForAdvisorUseCase, "GetApplicationsForAdvisorUseCase bean should be registered");
+        }
+    }
 
     @Test
     @DisplayName("Should register RegisterRequestUseCase bean in application context")

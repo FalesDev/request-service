@@ -9,6 +9,7 @@ public record ApplicationDto (
         String email,
         String idDocument,
         UUID idStatus,
-        UUID idLoanType
+        UUID idLoanType,
+        UUID idUser
 ){
 }

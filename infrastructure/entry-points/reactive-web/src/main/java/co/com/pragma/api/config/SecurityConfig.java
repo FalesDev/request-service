@@ -48,6 +48,7 @@ public class SecurityConfig {
                                 "/test"
                         ).permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/requests").hasRole("CLIENT")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/requests").hasRole("ADVISER")
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)

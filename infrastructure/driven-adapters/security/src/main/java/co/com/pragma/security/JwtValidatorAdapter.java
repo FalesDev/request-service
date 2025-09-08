@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -43,6 +44,7 @@ public class JwtValidatorAdapter implements TokenValidator {
                         .getPayload();
 
                 return ValidatedUser.builder()
+                        .idUser(UUID.fromString(claims.get("idUser", String.class)))
                         .email(claims.getSubject())
                         .idDocument(claims.get("idDocument", String.class))
                         .role(claims.get("role", String.class))

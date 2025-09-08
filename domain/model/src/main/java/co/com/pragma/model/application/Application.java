@@ -20,4 +20,5 @@ public class Application {
     private String idDocument;
     private UUID idStatus;
     private UUID idLoanType;
+    private UUID idUser;
 }

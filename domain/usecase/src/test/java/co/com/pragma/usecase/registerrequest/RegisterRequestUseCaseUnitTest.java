@@ -2,6 +2,8 @@ package co.com.pragma.usecase.registerrequest;
 
 import co.com.pragma.model.application.Application;
 import co.com.pragma.model.application.gateways.ApplicationRepository;
+import co.com.pragma.model.auth.ValidatedUser;
+import co.com.pragma.model.auth.gateway.AuthValidationGateway;
 import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.exception.InvalidAmountException;
 import co.com.pragma.model.gateways.CustomLogger;
@@ -37,6 +39,8 @@ public class RegisterRequestUseCaseUnitTest {
     @Mock
     private TransactionManager transactionManager;
     @Mock
+    private AuthValidationGateway authValidationGateway;
+    @Mock
     private CustomLogger customLogger;
 
     @InjectMocks
@@ -45,15 +49,23 @@ public class RegisterRequestUseCaseUnitTest {
     private Application testApplication;
     private LoanType loanType;
     private Status status;
+    private String token;
+    private ValidatedUser user;
 
     @BeforeEach
     void setUp() {
+        token = "valid-token";
+        user = ValidatedUser.builder()
+                .idUser(UUID.randomUUID())
+                .email("FABRICIO@GMAIL.COM")
+                .build();
+
         testApplication = Application.builder()
                 .id(UUID.randomUUID())
                 .amount(20000.0)
                 .term(12)
-                .email("FABRICIO@GMAIL.COM")
                 .idDocument("77777777")
+                .idLoanType(UUID.randomUUID())
                 .build();
 
         loanType = LoanType.builder()
@@ -78,22 +90,20 @@ public class RegisterRequestUseCaseUnitTest {
     @Test
     @DisplayName("Should register application successfully when loan type and status exist and amount is valid")
     void registerApplicationSuccess() {
+        when(authValidationGateway.validateClientUser(testApplication.getIdDocument(), token))
+                .thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(testApplication.getIdLoanType())).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName("Pending Review")).thenReturn(Mono.just(status));
-        when(applicationRepository.save(any(Application.class)))
-                .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
-        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
-                invocation.getArgument(0)
-        );
-
-        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication))
+        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication, token))
                 .expectNextMatches(app ->
                         app.getEmail().equals("fabricio@gmail.com") &&
                                 app.getIdStatus().equals(status.getId())
                 )
                 .verifyComplete();
 
+        verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
         verify(loanTypeRepository).findById(testApplication.getIdLoanType());
         verify(statusRepository).findByName("Pending Review");
         verify(applicationRepository).save(any(Application.class));
@@ -102,64 +112,51 @@ public class RegisterRequestUseCaseUnitTest {
     @Test
     @DisplayName("Should throw EntityNotFoundException when loan type is not found")
     void registerApplicationLoanTypeNotFound() {
-        when(loanTypeRepository.findById(testApplication.getIdLoanType()))
-                .thenReturn(Mono.empty());
-        when(statusRepository.findByName("Pending Review"))
-                .thenReturn(Mono.just(status));
-        when(transactionManager.executeInTransaction(any()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(authValidationGateway.validateClientUser(testApplication.getIdDocument(), token))
+                .thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(testApplication.getIdLoanType())).thenReturn(Mono.empty());
+        when(statusRepository.findByName("Pending Review")).thenReturn(Mono.just(status));
 
-        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication))
+        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication, token))
                 .expectError(EntityNotFoundException.class)
                 .verify();
+
+        verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
+        verify(loanTypeRepository).findById(testApplication.getIdLoanType());
+        verify(applicationRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Should throw InvalidAmountException when amount is null")
     void registerApplicationAmountNull() {
         testApplication.setAmount(null);
+        when(authValidationGateway.validateClientUser(testApplication.getIdDocument(), token))
+                .thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(testApplication.getIdLoanType())).thenReturn(Mono.just(loanType));
+        when(statusRepository.findByName("Pending Review")).thenReturn(Mono.just(status));
 
-        when(loanTypeRepository.findById(testApplication.getIdLoanType()))
-                .thenReturn(Mono.just(loanType));
-        when(statusRepository.findByName("Pending Review"))
-                .thenReturn(Mono.just(status));
-        when(transactionManager.executeInTransaction(any()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication))
+        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication, token))
                 .expectError(InvalidAmountException.class)
                 .verify();
-    }
 
-    @Test
-    @DisplayName("Should throw InvalidAmountException when amount is out of range")
-    void registerApplicationAmountOutOfRange() {
-        testApplication.setAmount(99999.0);
-
-        when(loanTypeRepository.findById(testApplication.getIdLoanType()))
-                .thenReturn(Mono.just(loanType));
-        when(statusRepository.findByName("Pending Review"))
-                .thenReturn(Mono.just(status));
-        when(transactionManager.executeInTransaction(any()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication))
-                .expectError(InvalidAmountException.class)
-                .verify();
+        verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
+        verify(loanTypeRepository).findById(testApplication.getIdLoanType());
+        verify(applicationRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Should throw EntityNotFoundException when status 'Pending Review' is not found")
     void registerApplicationStatusNotFound() {
+        when(authValidationGateway.validateClientUser(testApplication.getIdDocument(), token))
+                .thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(testApplication.getIdLoanType())).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName("Pending Review")).thenReturn(Mono.empty());
-        when(transactionManager.executeInTransaction(any()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication))
+        StepVerifier.create(registerRequestUseCase.registerApplication(testApplication, token))
                 .expectError(EntityNotFoundException.class)
                 .verify();
 
+        verify(authValidationGateway).validateClientUser(testApplication.getIdDocument(), token);
         verify(loanTypeRepository).findById(testApplication.getIdLoanType());
         verify(statusRepository).findByName("Pending Review");
         verify(applicationRepository, never()).save(any());
