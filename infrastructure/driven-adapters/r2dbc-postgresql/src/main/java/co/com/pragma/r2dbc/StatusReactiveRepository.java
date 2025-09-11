@@ -11,5 +11,6 @@ import java.util.UUID;
 
 public interface StatusReactiveRepository extends ReactiveCrudRepository<StatusEntity, UUID>, ReactiveQueryByExampleExecutor<StatusEntity> {
     Mono<StatusEntity> findByName(String name);
+    Mono<StatusEntity> findByNameIgnoreCase(String name);
     Flux<StatusEntity> findByNameIn(List<String> names);
 }

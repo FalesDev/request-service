@@ -12,6 +12,7 @@ import java.util.UUID;
 
 public interface ApplicationRepository {
     Mono<Application> save(Application application);
+    Mono<Application> findById(UUID id);
     Mono<CustomPage<Application>> findByIdStatusIn(List<UUID> statusIds, CustomPageable pageable);
     Flux<Application> findByIdUserAndIdStatus(UUID userId, UUID statusId);
 }

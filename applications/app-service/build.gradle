@@ -1,6 +1,7 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
+	implementation project(':sqs-notification-adapter')
 	implementation project(':security')
 	implementation project(':webclient')
 	implementation project(':logger')

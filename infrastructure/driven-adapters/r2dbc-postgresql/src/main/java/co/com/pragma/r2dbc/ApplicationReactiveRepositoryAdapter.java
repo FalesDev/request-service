@@ -35,6 +35,11 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
     }
 
     @Override
+    public Mono<Application> findById(UUID id){
+        return super.findById(id);
+    }
+
+    @Override
     public Mono<CustomPage<Application>> findByIdStatusIn(List<UUID> statusIds, CustomPageable customPageable) {
         Pageable pageable = convertToPageable(customPageable);
 

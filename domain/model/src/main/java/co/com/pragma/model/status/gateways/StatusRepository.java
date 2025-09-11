@@ -10,5 +10,6 @@ import java.util.UUID;
 public interface StatusRepository {
     Mono<Status> findById(UUID id);
     Mono<Status> findByName(String name);
+    Mono<Status> findByNameIgnoreCase(String name);
     Flux<Status> findByNames(List<String> names);
 }

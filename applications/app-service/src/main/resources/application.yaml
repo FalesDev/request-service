@@ -41,3 +41,15 @@ adapters:
 
 jwt:
   secret: rXm5xuejgjmoMoOaaP5G5EUl6Wl+nZxjHLMx2n8IPHE=
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION}
+      auto: false
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    end-point:
+      uri: ${AWS_SQS_ENDPOINT}
+

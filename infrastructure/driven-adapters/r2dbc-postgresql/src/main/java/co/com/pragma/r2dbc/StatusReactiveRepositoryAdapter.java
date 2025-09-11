@@ -35,6 +35,12 @@ public class StatusReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
+    public Mono<Status> findByNameIgnoreCase(String name){
+        return repository.findByNameIgnoreCase(name)
+                .map(entity->mapper.map(entity, Status.class));
+    }
+
+    @Override
     public Flux<Status> findByNames(List<String> names) {
         return repository.findByNameIn(names)
                 .map(entity -> mapper.map(entity, Status.class));

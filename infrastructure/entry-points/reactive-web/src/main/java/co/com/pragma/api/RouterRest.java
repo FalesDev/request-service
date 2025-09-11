@@ -2,6 +2,7 @@ package co.com.pragma.api;
 
 import co.com.pragma.api.dto.ApplicationDto;
 import co.com.pragma.api.dto.request.RegisterApplicationRequestDto;
+import co.com.pragma.api.dto.request.UpdateApplicationStatusRequest;
 import co.com.pragma.api.exception.GlobalExceptionHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -69,6 +70,33 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/requests",
+                    method = RequestMethod.PUT,
+                    beanClass = Handler.class,
+                    beanMethod = "updateApplicationStatus",
+                    operation = @Operation(
+                            operationId = "updateApplicationStatus",
+                            summary = "Update Application Status",
+                            tags = {"Request"},
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    content = @Content(
+                                            schema = @Schema(implementation = UpdateApplicationStatusRequest.class)
+                                    )
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Application updated",
+                                            content = @Content(
+                                                    mediaType = "application/json",
+                                                    schema = @Schema(implementation = ApplicationDto.class)
+                                            )
+                                    )
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler,
@@ -76,6 +104,7 @@ public class RouterRest {
         return RouterFunctions.route()
                 .POST("/api/v1/requests", handler::registerRequest)
                 .GET("/api/v1/requests", handler::getApplicationsForAdvisor)
+                .PUT("/api/v1/requests", handler::updateApplicationStatus)
                 .filter(globalExceptionHandler)
                 .build();
     }
