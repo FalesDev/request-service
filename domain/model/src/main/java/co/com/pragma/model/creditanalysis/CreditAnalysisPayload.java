@@ -13,7 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreditAnalysisPayload {
-    private UUID applicationId;
+    private UUID idApplication;
+    private UUID idUser;
     private String idDocument;
     private String email;
     private Double baseSalary;

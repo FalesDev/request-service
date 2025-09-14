@@ -70,6 +70,12 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
                 .map(entity -> mapper.map(entity, Application.class));
     }
 
+    @Override
+    public Flux<Application> findActiveLoansByIdUser(UUID userId) {
+        return repository.findActiveLoansByIdUser(userId)
+                .map(entity -> mapper.map(entity, Application.class));
+    }
+
     private Pageable convertToPageable(CustomPageable customPageable) {
         Sort.Direction direction = Sort.Direction.fromString(
                 customPageable.getSortDirection().equalsIgnoreCase("desc") ? "DESC" : "ASC"

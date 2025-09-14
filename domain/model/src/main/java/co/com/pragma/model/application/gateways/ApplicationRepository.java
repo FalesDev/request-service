@@ -15,4 +15,5 @@ public interface ApplicationRepository {
     Mono<Application> findById(UUID id);
     Mono<CustomPage<Application>> findByIdStatusIn(List<UUID> statusIds, CustomPageable pageable);
     Flux<Application> findByIdUserAndIdStatus(UUID userId, UUID statusId);
+    Flux<Application> findActiveLoansByIdUser(UUID userId);
 }

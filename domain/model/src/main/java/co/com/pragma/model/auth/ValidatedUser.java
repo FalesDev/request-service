@@ -13,5 +13,6 @@ public class ValidatedUser {
     private UUID idUser;
     private String email;
     private String idDocument;
+    private Double baseSalary;
     private String role;
 }
