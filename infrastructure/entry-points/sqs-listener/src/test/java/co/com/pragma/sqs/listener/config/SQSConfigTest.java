@@ -34,7 +34,7 @@ class SQSConfigTest {
     }
 
     @Test
-    void configSQSListenerIsNotNull() {
+    void listenerSQSClientConfigIsNotNull() {
         assertThat(sqsConfig.sqsListener(sqsAsyncClient, sqsProperties, message -> Mono.empty())).isNotNull();
     }
 

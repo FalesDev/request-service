@@ -65,7 +65,7 @@ public class RegisterRequestUseCase {
                                                                     payload.setIdApplication(savedApp.getId());
                                                                     payload.setIdUser(savedApp.getIdUser());
                                                                     if (Boolean.TRUE.equals(newLoanType.getAutomaticValidation())) {
-                                                                        customLogger.trace("Enqueuing fat payload for application {}", savedApp.getId());
+                                                                        customLogger.trace("Enqueuing payload for application {}", savedApp.getId());
                                                                         return creditAnalysisGateway.requestAnalysis(payload).thenReturn(savedApp);
                                                                     }
                                                                     return Mono.just(savedApp);

@@ -30,9 +30,9 @@ include ':webclient'
 project(':webclient').projectDir = file('./infrastructure/driven-adapters/webclient')
 include ':security'
 project(':security').projectDir = file('./infrastructure/driven-adapters/security')
-include ':sqs-notification-adapter'
-project(':sqs-notification-adapter').projectDir = file('./infrastructure/driven-adapters/sqs-notification-adapter')
 include ':sqs-listener'
 project(':sqs-listener').projectDir = file('./infrastructure/entry-points/sqs-listener')
 include ':metrics'
 project(':metrics').projectDir = file('./infrastructure/helpers/metrics')
+include ':sqs-sender'
+project(':sqs-sender').projectDir = file('./infrastructure/driven-adapters/sqs-sender')

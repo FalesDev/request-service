@@ -38,22 +38,23 @@ adapters:
     password: "admin"
 jwt:
   secret: "rXm5xuejgjmoMoOaaP5G5EUl6Wl+nZxjHLMx2n8IPHE="
-cloud:
-  aws:
-    region:
-      static: "${AWS_REGION}"
-      auto: false
-    credentials:
-      access-key: "${AWS_ACCESS_KEY_ID}"
-      secret-key: "${AWS_SECRET_ACCESS_KEY}"
-    end-point:
-      uri: "${AWS_SQS_ENDPOINT}"
 entrypoint:
   sqs:
-    region: "us-east-1"
-    endpoint: "http://localhost:4566"
-    queueUrl: "http://localhost:4566/000000000000/sample"
+    region: ${AWS_REGION}
+    queueUrl: ${AWS_SQS_RESPONSE_ENDEUDAMIENTO}
     waitTimeSeconds: 20
     maxNumberOfMessages: 10
     visibilityTimeoutSeconds: 10
     numberOfThreads: 1
+adapter:
+  sqs:
+    region: ${AWS_REGION}
+    queues:
+      indebtedness: ${AWS_SQS_ENDEUDAMIENTO}
+      notifications: ${AWS_SQS_NOTIFICACIONES}
+
+queue:
+  names:
+    indebtedness: indebtedness
+    notifications: notifications
+
