@@ -5,6 +5,7 @@ import co.com.pragma.model.application.gateways.ApplicationRepository;
 import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.NotificationGateway;
+import co.com.pragma.model.report.gateways.ReportApprovedGateway;
 import co.com.pragma.model.status.gateways.StatusRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -17,6 +18,7 @@ public class UpdateApplicationStatusUseCase {
     private final ApplicationRepository applicationRepository;
     private final StatusRepository statusRepository;
     private final NotificationGateway notificationGateway;
+    private final ReportApprovedGateway reportApprovedGateway;
     private final CustomLogger customLogger;
 
     public Mono<Application> updateStatus(UUID applicationId, String newStatusName) {
@@ -29,11 +31,17 @@ public class UpdateApplicationStatusUseCase {
                         .flatMap(application -> {
                             application.setIdStatus(newStatus.getId());
                             return applicationRepository.save(application)
-                                    .flatMap(savedApp -> notificationGateway.sendDecisionNotification(savedApp,newStatus.getName())
-                                            .then(Mono.fromRunnable(() ->
-                                                    customLogger.trace("Notification successfully sent for Application ID: {}", savedApp.getId())
-                                            ))
-                                            .thenReturn(savedApp)
+                                    .flatMap(savedApp ->
+                                            notificationGateway.sendDecisionNotification(savedApp, newStatus.getName())
+                                                    .then(
+                                                            "Approved".equalsIgnoreCase(newStatus.getName())
+                                                                    ? reportApprovedGateway.sendReportApprovedCount(savedApp, newStatus.getName())
+                                                                    : Mono.empty()
+                                                    )
+                                                    .then(Mono.fromRunnable(() ->
+                                                            customLogger.trace("Notification + reporting event sent for Application ID: {}", savedApp.getId())
+                                                    ))
+                                                    .thenReturn(savedApp)
                                     );
                         })
                 )

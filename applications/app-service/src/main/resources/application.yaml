@@ -52,9 +52,11 @@ adapter:
     queues:
       indebtedness: ${AWS_SQS_ENDEUDAMIENTO}
       notifications: ${AWS_SQS_NOTIFICACIONES}
+      reporting: ${AWS_SQS_REPORTES}
 
 queue:
   names:
     indebtedness: indebtedness
     notifications: notifications
+    reporting: reporting
 

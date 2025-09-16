@@ -10,6 +10,7 @@ import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.NotificationGateway;
 import co.com.pragma.model.loantype.gateways.LoanTypeRepository;
+import co.com.pragma.model.report.gateways.ReportApprovedGateway;
 import co.com.pragma.model.status.Status;
 import co.com.pragma.model.status.gateways.StatusRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class ProcessApplicationDecisionUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final NotificationGateway notificationGateway;
     private final PaymentPlanGenerator paymentPlanGenerator;
+    private final ReportApprovedGateway reportApprovedGateway;
     private final CustomLogger logger;
 
     private static final String DECISION_APPROVED = "Approved";
@@ -75,7 +77,12 @@ public class ProcessApplicationDecisionUseCase {
 
                     logger.trace("Sending notification for applicationId={} with status={}",
                             updatedApplication.getId(), status.getName());
-                    return notificationGateway.sendCreditAnalysisDecisionNotification(payload);
+                    return notificationGateway.sendCreditAnalysisDecisionNotification(payload)
+                            .then(
+                                    DECISION_APPROVED.equalsIgnoreCase(status.getName())
+                                            ? reportApprovedGateway.sendReportApprovedCount(updatedApplication, status.getName())
+                                            : Mono.empty()
+                            );
                 });
     }
 }

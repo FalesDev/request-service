@@ -5,6 +5,7 @@ import co.com.pragma.model.auth.gateway.AuthValidationGateway;
 import co.com.pragma.model.creditanalysis.PaymentPlanGenerator;
 import co.com.pragma.model.gateways.CustomLogger;
 import co.com.pragma.model.gateways.NotificationGateway;
+import co.com.pragma.model.report.gateways.ReportApprovedGateway;
 import co.com.pragma.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.model.status.gateways.StatusRepository;
 import co.com.pragma.usecase.findloantypebyid.FindLoanTypeByIdUseCase;
@@ -50,10 +51,11 @@ public class UseCasesConfig {
             LoanTypeRepository loanTypeRepository,
             NotificationGateway notificationGateway,
             PaymentPlanGenerator paymentPlanGenerator,
+            ReportApprovedGateway reportApprovedGateway,
             CustomLogger customLogger
     ) {
         return new ProcessApplicationDecisionUseCase(applicationRepository, statusRepository,loanTypeRepository,
-                notificationGateway, paymentPlanGenerator, customLogger);
+                notificationGateway, paymentPlanGenerator, reportApprovedGateway,customLogger);
     }
 
     @Bean
