@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+logging:
+  level:
+    root: INFO
+    co.com.pragma: INFO
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+adapters:
+  r2dbc:
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    database: ${DB_NAME}
+    schema: ${DB_SCHEMA}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    ssl: true
+
+services:
+  auth:
+    url: ${SERVICES_AUTH_URL}

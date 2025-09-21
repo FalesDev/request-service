@@ -19,6 +19,7 @@ management:
     web:
       exposure:
         include: "health,prometheus"
+      base-path: /request/actuator
   endpoint:
     health:
       probes:
@@ -36,8 +37,9 @@ adapters:
     schema: "public"
     username: "admin"
     password: "admin"
+    ssl: false
 jwt:
-  secret: "rXm5xuejgjmoMoOaaP5G5EUl6Wl+nZxjHLMx2n8IPHE="
+  secret: ${JWT_SECRET}
 entrypoint:
   sqs:
     region: ${AWS_REGION}

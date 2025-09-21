@@ -47,9 +47,10 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/test"
                         ).permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/v1/requests").hasRole("CLIENT")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/requests").hasRole("ADVISER")
-                        .pathMatchers(HttpMethod.PUT, "/api/v1/requests").hasRole("ADVISER")
+                        .pathMatchers(HttpMethod.POST, "/request/api/v1/requests").hasRole("CLIENT")
+                        .pathMatchers(HttpMethod.GET, "/request/api/v1/requests").hasRole("ADVISER")
+                        .pathMatchers(HttpMethod.PUT, "/request/api/v1/requests").hasRole("ADVISER")
+                        .pathMatchers("/request/actuator/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)

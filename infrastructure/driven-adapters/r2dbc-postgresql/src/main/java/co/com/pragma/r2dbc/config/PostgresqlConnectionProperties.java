@@ -10,5 +10,6 @@ public record PostgresqlConnectionProperties(
         String database,
         String schema,
         String username,
-        String password) {
+        String password,
+        boolean ssl) {
 }

@@ -29,7 +29,7 @@ public class AuthServiceAdapter implements AuthValidationGateway {
     public Mono<ValidatedUser> validateClientUser(String idDocument, String token){
         return authWebClient
                 .post()
-                .uri("/api/v1/users/document")
+                .uri("/auth/api/v1/users/document")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .bodyValue(new UserValidationRequest(idDocument))
                 .retrieve()
@@ -49,7 +49,7 @@ public class AuthServiceAdapter implements AuthValidationGateway {
     public Flux<UserFound> foundClientByIds(List<UUID> userIds, String token) {
         return authWebClient
                 .post()
-                .uri("/api/v1/users/find")
+                .uri("/auth/api/v1/users/find")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .bodyValue(new UsersFoundRequest(userIds))
                 .retrieve()

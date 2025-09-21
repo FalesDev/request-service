@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
@@ -19,12 +20,13 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 @Configuration
+@RequiredArgsConstructor
 public class RouterRest {
 
     @Bean
     @RouterOperations({
             @RouterOperation(
-                    path = "/api/v1/requests",
+                    path = "/request/api/v1/requests",
                     method = RequestMethod.POST,
                     beanClass = Handler.class,
                     beanMethod = "registerRequest",
@@ -51,7 +53,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/requests",
+                    path = "/request/api/v1/requests",
                     method = RequestMethod.GET,
                     beanClass = Handler.class,
                     beanMethod = "getApplicationsForAdvisor",
@@ -72,7 +74,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/requests",
+                    path = "/request/api/v1/requests",
                     method = RequestMethod.PUT,
                     beanClass = Handler.class,
                     beanMethod = "updateApplicationStatus",
@@ -102,9 +104,9 @@ public class RouterRest {
     public RouterFunction<ServerResponse> routerFunction(Handler handler,
                                                          GlobalExceptionHandler globalExceptionHandler) {
         return RouterFunctions.route()
-                .POST("/api/v1/requests", handler::registerRequest)
-                .GET("/api/v1/requests", handler::getApplicationsForAdvisor)
-                .PUT("/api/v1/requests", handler::updateApplicationStatus)
+                .POST("/request/api/v1/requests", handler::registerRequest)
+                .GET("/request/api/v1/requests", handler::getApplicationsForAdvisor)
+                .PUT("/request/api/v1/requests", handler::updateApplicationStatus)
                 .filter(globalExceptionHandler)
                 .build();
     }
