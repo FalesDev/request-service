@@ -62,3 +62,6 @@ queue:
     notifications: notifications
     reporting: reporting
 
+app:
+  timezone: America/Lima
+

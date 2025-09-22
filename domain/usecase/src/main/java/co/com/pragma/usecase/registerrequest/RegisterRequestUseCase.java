@@ -40,6 +40,9 @@ public class RegisterRequestUseCase {
     private final CreditAnalysisGateway creditAnalysisGateway;
     private final CustomLogger customLogger;
 
+    private static final String PENDING_REVIEW_STATUS_NAME = "Pending Review";
+    private static final String APPROVED_STATUS_NAME = "Approved";
+
     public Mono<Application> registerApplication(Application application, String token) {
         customLogger.trace("Starting request registration for idDocument: {}", application.getIdDocument());
 
@@ -106,7 +109,7 @@ public class RegisterRequestUseCase {
                 .amount(newApp.getAmount())
                 .term(newApp.getTerm())
                 .interestRate(newLoanType.getInterestRate())
-                .estado("Pending Review")
+                .estado(PENDING_REVIEW_STATUS_NAME)
                 .build();
 
         List<LoanDetails> activeLoansDetails = activeLoans.stream()
@@ -116,7 +119,7 @@ public class RegisterRequestUseCase {
                             .amount(loan.getAmount())
                             .term(loan.getTerm())
                             .interestRate(loanType.getInterestRate())
-                            .estado("Approved")
+                            .estado(APPROVED_STATUS_NAME)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -152,7 +155,7 @@ public class RegisterRequestUseCase {
     }
 
     private Mono<Status> findPendingReviewStatus() {
-        return statusRepository.findByName("Pending Review")
+        return statusRepository.findByName(PENDING_REVIEW_STATUS_NAME)
                 .switchIfEmpty(Mono.defer(() -> {
                     customLogger.trace("Status 'Pending Review' not found");
                     return Mono.error(new EntityNotFoundException("Status 'Pending Review' not found"));

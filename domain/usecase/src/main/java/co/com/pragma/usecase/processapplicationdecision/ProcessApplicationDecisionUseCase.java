@@ -16,6 +16,7 @@ import co.com.pragma.model.status.gateways.StatusRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,9 +44,15 @@ public class ProcessApplicationDecisionUseCase {
                     Application application = tuple.getT1();
                     Status newStatus = tuple.getT2();
 
-                    Application updatedApp = application.toBuilder()
+                    Application.ApplicationBuilder appBuilder = application.toBuilder()
                             .idStatus(newStatus.getId())
-                            .build();
+                            .updatedAt(LocalDateTime.now());
+
+                    if (DECISION_APPROVED.equalsIgnoreCase(message.getDecision())) {
+                        appBuilder.approvedAt(LocalDateTime.now());
+                    }
+
+                    Application updatedApp = appBuilder.build();
 
                     if (DECISION_APPROVED.equalsIgnoreCase(message.getDecision())) {
                         return loanTypeRepository.findById(application.getIdLoanType())

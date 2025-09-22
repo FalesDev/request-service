@@ -8,6 +8,7 @@ import co.com.pragma.model.auth.ValidatedUser;
 import co.com.pragma.model.exception.UnauthorizedException;
 import co.com.pragma.model.gateways.TokenValidator;
 import co.com.pragma.model.pagination.CustomPageable;
+import co.com.pragma.usecase.findapprovedapplicationdaily.FindApprovedApplicationDailyUseCase;
 import co.com.pragma.usecase.getapplicationsforadvisor.GetApplicationsForAdvisorUseCase;
 import co.com.pragma.usecase.registerrequest.RegisterRequestUseCase;
 import co.com.pragma.usecase.updateapplicationstatus.UpdateApplicationStatusUseCase;
@@ -28,6 +29,7 @@ public class Handler {
     private final RegisterRequestUseCase registerRequestUseCase;
     private final GetApplicationsForAdvisorUseCase getApplicationsForAdvisorUseCase;
     private final UpdateApplicationStatusUseCase updateApplicationStatusUseCase;
+    private final FindApprovedApplicationDailyUseCase findApprovedApplicationDailyUseCase;
     private final ApplicationMapper applicationMapper;
     private final ValidationService validationService;
     private final TokenValidator tokenValidator;
@@ -93,6 +95,14 @@ public class Handler {
                                 validationRequest.status())
                 )
                 .map(applicationMapper::toResponse)
+                .flatMap(response -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response)
+                );
+    }
+
+    public Mono<ServerResponse> getApprovedApplicationDaily(ServerRequest serverRequest) {
+        return findApprovedApplicationDailyUseCase.findApprovedApplicationDaily()
                 .flatMap(response -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(response)

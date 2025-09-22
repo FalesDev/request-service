@@ -6,6 +6,7 @@ import co.com.pragma.model.pagination.CustomPageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,4 +17,5 @@ public interface ApplicationRepository {
     Mono<CustomPage<Application>> findByIdStatusIn(List<UUID> statusIds, CustomPageable pageable);
     Flux<Application> findByIdUserAndIdStatus(UUID userId, UUID statusId);
     Flux<Application> findActiveLoansByIdUser(UUID userId);
+    Flux<Application> findByStatusAndApprovedDateBetween(UUID statusId, LocalDateTime start, LocalDateTime end);
 }

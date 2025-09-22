@@ -4,6 +4,7 @@ import co.com.pragma.api.dto.ApplicationDto;
 import co.com.pragma.api.dto.request.RegisterApplicationRequestDto;
 import co.com.pragma.api.dto.request.UpdateApplicationStatusRequest;
 import co.com.pragma.api.exception.GlobalExceptionHandler;
+import co.com.pragma.model.report.DailyReport;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -99,6 +100,27 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/request/api/v1/requests/approved/yesterday",
+                    method = RequestMethod.GET,
+                    beanClass = Handler.class,
+                    beanMethod = "getApprovedApplicationDaily",
+                    operation = @Operation(
+                            operationId = "getApprovedApplicationDaily",
+                            summary = "Get approved applications daily",
+                            tags = {"Request"},
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "List of applications retrieved successfully",
+                                            content = @Content(
+                                                    mediaType = "application/json",
+                                                    schema = @Schema(implementation = DailyReport.class)
+                                            )
+                                    )
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler,
@@ -107,6 +129,7 @@ public class RouterRest {
                 .POST("/request/api/v1/requests", handler::registerRequest)
                 .GET("/request/api/v1/requests", handler::getApplicationsForAdvisor)
                 .PUT("/request/api/v1/requests", handler::updateApplicationStatus)
+                .GET("/request/api/v1/requests/approved/yesterday", handler::getApprovedApplicationDaily)
                 .filter(globalExceptionHandler)
                 .build();
     }

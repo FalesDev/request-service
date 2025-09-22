@@ -8,6 +8,7 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,4 +21,6 @@ public interface ApplicationReactiveRepository extends ReactiveCrudRepository<Ap
             "JOIN status s ON a.id_status = s.id " +
             "WHERE a.id_user = :idUser AND s.name = 'Approved'")
     Flux<ApplicationEntity> findActiveLoansByIdUser(UUID idUser);
+    @Query("SELECT * FROM applications WHERE id_status = :statusId AND approved_at >= :start AND approved_at < :end")
+    Flux<ApplicationEntity> findByStatusAndApprovedDateBetween(UUID statusId, LocalDateTime start, LocalDateTime end);
 }

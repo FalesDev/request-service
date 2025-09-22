@@ -10,6 +10,7 @@ import co.com.pragma.model.status.gateways.StatusRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -21,6 +22,8 @@ public class UpdateApplicationStatusUseCase {
     private final ReportApprovedGateway reportApprovedGateway;
     private final CustomLogger customLogger;
 
+    private static final String APPROVED_STATUS_NAME = "Approved";
+
     public Mono<Application> updateStatus(UUID applicationId, String newStatusName) {
         customLogger.info("Starting use case to update request status: {}", applicationId);
 
@@ -30,11 +33,17 @@ public class UpdateApplicationStatusUseCase {
                         .switchIfEmpty(Mono.error(new EntityNotFoundException("Application not found")))
                         .flatMap(application -> {
                             application.setIdStatus(newStatus.getId());
+                            application.setUpdatedAt(LocalDateTime.now());
+                            if (APPROVED_STATUS_NAME.equalsIgnoreCase(newStatus.getName())) {
+                                application.setApprovedAt(LocalDateTime.now());
+                            }else {
+                                application.setApprovedAt(null);
+                            }
                             return applicationRepository.save(application)
                                     .flatMap(savedApp ->
                                             notificationGateway.sendDecisionNotification(savedApp, newStatus.getName())
                                                     .then(
-                                                            "Approved".equalsIgnoreCase(newStatus.getName())
+                                                            APPROVED_STATUS_NAME.equalsIgnoreCase(newStatus.getName())
                                                                     ? reportApprovedGateway.sendReportApprovedCount(savedApp, newStatus.getName())
                                                                     : Mono.empty()
                                                     )

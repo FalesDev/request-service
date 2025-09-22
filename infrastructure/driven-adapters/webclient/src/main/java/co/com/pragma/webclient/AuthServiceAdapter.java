@@ -40,7 +40,7 @@ public class AuthServiceAdapter implements AuthValidationGateway {
                     if (response.statusCode().equals(HttpStatus.NOT_FOUND)) {
                         return Mono.error(new EntityNotFoundException("User not found in auth service"));
                     }
-                    return Mono.empty();
+                    return response.createException().flatMap(Mono::error);
                 })
                 .bodyToMono(ValidatedUser.class);
     }
@@ -60,7 +60,7 @@ public class AuthServiceAdapter implements AuthValidationGateway {
                     if (response.statusCode().equals(HttpStatus.NOT_FOUND)) {
                         return Mono.error(new EntityNotFoundException("Users not found in auth service"));
                     }
-                    return Mono.empty();
+                    return response.createException().flatMap(Mono::error);
                 })
                 .bodyToFlux(UserFound.class);
     }

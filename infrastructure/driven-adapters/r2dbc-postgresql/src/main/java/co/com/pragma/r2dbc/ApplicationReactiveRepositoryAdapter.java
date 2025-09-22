@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -73,6 +74,12 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
     @Override
     public Flux<Application> findActiveLoansByIdUser(UUID userId) {
         return repository.findActiveLoansByIdUser(userId)
+                .map(entity -> mapper.map(entity, Application.class));
+    }
+
+    @Override
+    public Flux<Application> findByStatusAndApprovedDateBetween(UUID statusId, LocalDateTime start, LocalDateTime end) {
+        return repository.findByStatusAndApprovedDateBetween(statusId, start, end)
                 .map(entity -> mapper.map(entity, Application.class));
     }
 

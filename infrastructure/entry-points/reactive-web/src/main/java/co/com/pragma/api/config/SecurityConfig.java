@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/request/api/v1/requests").hasRole("CLIENT")
                         .pathMatchers(HttpMethod.GET, "/request/api/v1/requests").hasRole("ADVISER")
                         .pathMatchers(HttpMethod.PUT, "/request/api/v1/requests").hasRole("ADVISER")
+                        .pathMatchers(HttpMethod.GET, "/request/api/v1/requests/approved/yesterday").hasAnyRole("ADMIN", "REPORT_JOB")
                         .pathMatchers("/request/actuator/**").permitAll()
                         .anyExchange().authenticated()
                 )

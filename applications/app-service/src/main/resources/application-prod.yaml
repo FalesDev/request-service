@@ -25,3 +25,6 @@ adapters:
 services:
   auth:
     url: ${SERVICES_AUTH_URL}
+
+app:
+  timezone: ${TIME_ZONE}
