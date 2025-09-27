@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -16,8 +20,10 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -99,7 +105,7 @@ class ConfigTest {
         });
 
         webTestClient.get()
-                .uri("/api/v1/requests")
+                .uri("/request/api/v1/requests")
                 .header("Authorization", "Bearer expired")
                 .exchange()
                 .expectStatus().isUnauthorized()
@@ -109,6 +115,35 @@ class ConfigTest {
                 .jsonPath("$.message").isEqualTo("Authentication failed"); // Changed expected message
     }
 
+    @Test
+    @DisplayName("Should return 403 Forbidden when authenticated user has wrong role")
+    void testAccessDeniedWhenUserHasWrongRole() {
+        when(jwtAuthenticationFilter.filter(any(), any())).thenAnswer(invocation -> {
+            var auth = new UsernamePasswordAuthenticationToken(
+                    "user", null,
+                    java.util.List.of(new SimpleGrantedAuthority("ROLE_CLIENT"))
+            );
+            var securityContext = new SecurityContextImpl(auth);
+
+            return invocation.getArgument(1, WebFilterChain.class)
+                    .filter(invocation.getArgument(0, ServerWebExchange.class))
+                    .contextWrite(org.springframework.security.core.context.ReactiveSecurityContextHolder
+                            .withSecurityContext(Mono.just(securityContext)));
+        });
+
+        webTestClient.get()
+                .uri("/request/api/v1/requests")
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(403)
+                .jsonPath("$.error").isEqualTo("FORBIDDEN")
+                .jsonPath("$.message").isEqualTo("You don't have permission to access this resource");
+
+        verify(customLogger).warn(eq("Access denied: {}"), anyString());
+    }
+
     @Configuration
     static class TestRouter {
         @Bean
@@ -116,9 +151,8 @@ class ConfigTest {
             return route()
                     .GET("/test", req -> ServerResponse.ok().bodyValue("ok"))
                     .POST("/test", req -> ServerResponse.noContent().build())
-                    .GET("/api/v1/requests", req -> ServerResponse.ok().bodyValue("user details"))
+                    .GET("/request/api/v1/requests", req -> ServerResponse.ok().bodyValue("user details"))
                     .build();
         }
     }
-
 }

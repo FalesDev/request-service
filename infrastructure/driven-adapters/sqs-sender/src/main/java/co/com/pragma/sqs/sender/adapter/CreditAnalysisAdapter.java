@@ -4,7 +4,6 @@ import co.com.pragma.model.creditanalysis.CreditAnalysisPayload;
 import co.com.pragma.model.creditanalysis.gateway.CreditAnalysisGateway;
 import co.com.pragma.sqs.sender.SQSSender;
 import co.com.pragma.sqs.sender.factory.SqsMessageFactory;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -12,14 +11,21 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class CreditAnalysisAdapter implements CreditAnalysisGateway {
 
     private final SQSSender sqsSender;
     private final SqsMessageFactory messageFactory;
+    private final String indebtednessQueue;
 
-    @Value("${queue.names.indebtedness}")
-    private String indebtednessQueue;
+    public CreditAnalysisAdapter(
+            SQSSender sqsSender,
+            SqsMessageFactory messageFactory,
+            @Value("${queue.names.indebtedness}") String indebtednessQueue
+    ) {
+        this.sqsSender = sqsSender;
+        this.messageFactory = messageFactory;
+        this.indebtednessQueue = indebtednessQueue;
+    }
 
     @Override
     public Mono<Void> requestAnalysis(CreditAnalysisPayload payload) {

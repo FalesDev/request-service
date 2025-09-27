@@ -9,8 +9,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -20,16 +18,11 @@ import java.util.Base64;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 public class JwtValidatorAdapter implements TokenValidator {
 
-    @Value("${jwt.secret}")
-    private String secretKeyString;
+    private final SecretKey secretKey;
 
-    private SecretKey secretKey;
-
-    @PostConstruct
-    public void init() {
+    public JwtValidatorAdapter(@Value("${jwt.secret}") String secretKeyString) {
         this.secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKeyString));
     }
 

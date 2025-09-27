@@ -39,8 +39,16 @@ class PostgreSQLConnectionPoolTest {
     }
 
     @Test
-    @DisplayName("Successfully builds PostgreSQL connection configuration")
-    void getConnectionConfigSuccess() {
+    @DisplayName("Builds config with SSL disabled")
+    void getConnectionConfigSslDisabled() {
+        when(properties.ssl()).thenReturn(false);
+        assertNotNull(connectionPool.getConnectionConfig(properties));
+    }
+
+    @Test
+    @DisplayName("Builds config with SSL enabled")
+    void getConnectionConfigSslEnabled() {
+        when(properties.ssl()).thenReturn(true);
         assertNotNull(connectionPool.getConnectionConfig(properties));
     }
 }

@@ -5,7 +5,6 @@ import co.com.pragma.model.report.ReportApprovedMessage;
 import co.com.pragma.model.report.gateways.ReportApprovedGateway;
 import co.com.pragma.sqs.sender.SQSSender;
 import co.com.pragma.sqs.sender.factory.SqsMessageFactory;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -13,14 +12,21 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class ReportApprovedAdapter implements ReportApprovedGateway {
 
     private final SQSSender sqsSender;
     private final SqsMessageFactory messageFactory;
+    private final String reportingQueue;
 
-    @Value("${queue.names.reporting}")
-    private String reportingQueue;
+    public ReportApprovedAdapter(
+            SQSSender sqsSender,
+            SqsMessageFactory messageFactory,
+            @Value("${queue.names.reporting}") String reportingQueue
+    ) {
+        this.sqsSender = sqsSender;
+        this.messageFactory = messageFactory;
+        this.reportingQueue = reportingQueue;
+    }
 
     @Override
     public Mono<Void> sendReportApprovedCount(Application application, String status) {

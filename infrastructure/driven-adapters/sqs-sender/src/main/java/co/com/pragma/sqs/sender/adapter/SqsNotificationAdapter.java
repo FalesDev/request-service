@@ -13,14 +13,21 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class SqsNotificationAdapter implements NotificationGateway {
 
     private final SQSSender sqsSender;
     private final SqsMessageFactory messageFactory;
+    private final String notificationsQueue;
 
-    @Value("${queue.names.notifications}")
-    private String notificationsQueue;
+    public SqsNotificationAdapter(
+            SQSSender sqsSender,
+            SqsMessageFactory messageFactory,
+            @Value("${queue.names.notifications}") String notificationsQueue
+    ) {
+        this.sqsSender = sqsSender;
+        this.messageFactory = messageFactory;
+        this.notificationsQueue = notificationsQueue;
+    }
 
     @Override
     public Mono<Void> sendDecisionNotification(Application application, String status) {

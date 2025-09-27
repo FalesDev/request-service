@@ -129,4 +129,49 @@ public class StatusReactiveRepositoryAdapterTest {
         StepVerifier.create(repositoryAdapter.findByNames(names))
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("Should return Status when found by name ignore case")
+    void shouldFindByNameIgnoreCase() {
+        when(repository.findByNameIgnoreCase("pending review")).thenReturn(Mono.just(entity));
+        when(mapper.map(entity, Status.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findByNameIgnoreCase("pending review"))
+                .expectNext(domain)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should return empty Mono when Status not found by name ignore case")
+    void shouldReturnEmptyWhenNotFoundByNameIgnoreCase() {
+        when(repository.findByNameIgnoreCase("notexist")).thenReturn(Mono.empty());
+
+        StepVerifier.create(repositoryAdapter.findByNameIgnoreCase("notexist"))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findByNameIgnoreCase fails")
+    void shouldPropagateErrorWhenFindByNameIgnoreCaseFails() {
+        RuntimeException error = new RuntimeException("DB error");
+        when(repository.findByNameIgnoreCase("pending review")).thenReturn(Mono.error(error));
+
+        StepVerifier.create(repositoryAdapter.findByNameIgnoreCase("pending review"))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("DB error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findByNames fails")
+    void shouldPropagateErrorWhenFindByNamesFails() {
+        List<String> names = List.of("Pending Review", "Approved");
+        RuntimeException error = new RuntimeException("DB error");
+        when(repository.findByNameIn(names)).thenReturn(Flux.error(error));
+
+        StepVerifier.create(repositoryAdapter.findByNames(names))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("DB error"))
+                .verify();
+    }
 }

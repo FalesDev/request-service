@@ -65,7 +65,7 @@ class JwtAuthenticationFilterTest {
 
         when(tokenValidator.validateToken("valid-token"))
                 .thenReturn(Mono.just(new ValidatedUser(UUID.randomUUID(),
-                        "user@email.com", "12345678", "USER")));
+                        "user@email.com", "12345678", 7000.0,"USER")));
 
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
@@ -115,5 +115,22 @@ class JwtAuthenticationFilterTest {
 
         verify(logger, never()).warn(anyString(), any());
     }
+
+    @Test
+    void shouldReturnNullWhenAuthHeaderDoesNotStartWithBearer() {
+        ServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/test")
+                        .header(HttpHeaders.AUTHORIZATION, "Token some-token")
+                        .build()
+        );
+
+        when(chain.filter(exchange)).thenReturn(Mono.empty());
+
+        StepVerifier.create(filter.filter(exchange, chain))
+                .verifyComplete();
+
+        verify(tokenValidator, never()).validateToken(anyString());
+    }
+
 }
 

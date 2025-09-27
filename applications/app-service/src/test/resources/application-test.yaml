@@ -1,0 +1,15 @@
+jwt:
+  secret: iqacVRQkZ3dshw8HY4viiz4Hv3y4QCLkrxa15FKOtQk=
+
+entrypoint:
+  sqs:
+    region: us-east-1
+    queueUrl: "test-queue-url"
+
+adapter:
+  sqs:
+    region: us-east-1
+    queues:
+      indebtedness: "test-indebtedness"
+      notifications: "test-notifications"
+      reporting: "test-reporting"

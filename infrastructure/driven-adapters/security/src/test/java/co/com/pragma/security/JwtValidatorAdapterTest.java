@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.test.StepVerifier;
 
 import javax.crypto.SecretKey;
@@ -16,25 +15,17 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 @ExtendWith(MockitoExtension.class)
 public class JwtValidatorAdapterTest {
 
     private JwtValidatorAdapter jwtValidatorAdapter;
     private SecretKey testSecretKey;
-    private final String testSecret = "testSecretKeyWhichIsLongEnoughForHS256Algorithm";
 
     @BeforeEach
     void setUp() {
-        jwtValidatorAdapter = new JwtValidatorAdapter();
-
+        String testSecret = "testSecretKeyWhichIsLongEnoughForHS256Algorithm";
         String base64Secret = Base64.getEncoder().encodeToString(testSecret.getBytes());
-        ReflectionTestUtils.setField(jwtValidatorAdapter, "secretKeyString", base64Secret);
-
-        jwtValidatorAdapter.init();
-
+        jwtValidatorAdapter = new JwtValidatorAdapter(base64Secret);
         testSecretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Secret));
     }
 
@@ -117,19 +108,5 @@ public class JwtValidatorAdapterTest {
                         throwable instanceof TokenValidationException &&
                                 throwable.getMessage().startsWith("Invalid JWT token:"))
                 .verify();
-    }
-
-    @Test
-    @DisplayName("Should initialize secret key correctly")
-    void init_ShouldInitializeSecretKey() {
-        JwtValidatorAdapter adapter = new JwtValidatorAdapter();
-        String base64Secret = Base64.getEncoder().encodeToString(testSecret.getBytes());
-        ReflectionTestUtils.setField(adapter, "secretKeyString", base64Secret);
-
-        adapter.init();
-
-        SecretKey secretKey = (SecretKey) ReflectionTestUtils.getField(adapter, "secretKey");
-        assertNotNull(secretKey);
-        assertEquals("HmacSHA256", secretKey.getAlgorithm());
     }
 }

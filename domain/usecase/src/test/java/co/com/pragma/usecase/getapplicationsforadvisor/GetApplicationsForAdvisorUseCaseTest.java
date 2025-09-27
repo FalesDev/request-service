@@ -425,4 +425,25 @@ class GetApplicationsForAdvisorUseCaseTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("Should calculate monthly payment when term is zero")
+    void shouldCalculateMonthlyPaymentWithZeroTerm() {
+        double principal = 12000.0;
+        double annualInterestRate = 0.0;
+        int termInMonths = 0;
+
+        double result;
+        try {
+            var method = GetApplicationsForAdvisorUseCase.class
+                    .getDeclaredMethod("calculateMonthlyPayment", double.class, double.class, int.class);
+            method.setAccessible(true);
+            result = (double) method.invoke(useCase, principal, annualInterestRate, termInMonths);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        assertThat(result).isEqualTo(principal);
+    }
+
 }

@@ -7,8 +7,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class SpringApplicationConfigurationProvider implements ApplicationConfigurationProvider {
 
-    @Value("${app.timezone}")
-    private String timezone;
+    private final String timezone;
+
+    public SpringApplicationConfigurationProvider(
+            @Value("${app.timezone}") String timezone) {
+        this.timezone = timezone;
+    }
 
     @Override
     public String getTimezone() {

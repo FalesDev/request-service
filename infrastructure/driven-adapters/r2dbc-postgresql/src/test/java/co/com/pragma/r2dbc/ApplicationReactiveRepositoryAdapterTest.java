@@ -1,6 +1,7 @@
 package co.com.pragma.r2dbc;
 
 import co.com.pragma.model.application.Application;
+import co.com.pragma.model.pagination.CustomPage;
 import co.com.pragma.model.pagination.CustomPageable;
 import co.com.pragma.r2dbc.entity.ApplicationEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,16 +55,16 @@ class ApplicationReactiveRepositoryAdapterTest {
                 .idUser(UUID.randomUUID())
                 .build();
 
-        entity = new ApplicationEntity(
-                domain.getId(),
-                domain.getAmount(),
-                domain.getTerm(),
-                domain.getEmail(),
-                domain.getIdDocument(),
-                domain.getIdStatus(),
-                domain.getIdLoanType(),
-                domain.getIdUser()
-        );
+        entity = ApplicationEntity.builder()
+                .id(domain.getId())
+                .amount(domain.getAmount())
+                .term(domain.getTerm())
+                .email(domain.getEmail())
+                .idDocument(domain.getIdDocument())
+                .idStatus(domain.getIdStatus())
+                .idLoanType(domain.getIdLoanType())
+                .idUser(domain.getIdUser())
+                .build();
 
         customPageable = CustomPageable.builder()
                 .page(0)
@@ -94,6 +96,33 @@ class ApplicationReactiveRepositoryAdapterTest {
         StepVerifier.create(repositoryAdapter.save(domain))
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException
                         && throwable.getMessage().equals("DB error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should find application by ID")
+    void findByIdShouldReturnApplication() {
+        UUID id = domain.getId();
+
+        when(repository.findById(id)).thenReturn(Mono.just(entity));
+        when(mapper.map(entity, Application.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findById(id))
+                .expectNextMatches(app -> app.getId().equals(domain.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findById fails")
+    void findByIdShouldPropagateError() {
+        UUID id = UUID.randomUUID();
+        RuntimeException error = new RuntimeException("DB find error");
+
+        when(repository.findById(id)).thenReturn(Mono.error(error));
+
+        StepVerifier.create(repositoryAdapter.findById(id))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().equals("DB find error"))
                 .verify();
     }
 
@@ -281,4 +310,122 @@ class ApplicationReactiveRepositoryAdapterTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("Should find active loans by user ID")
+    void findActiveLoansByIdUserShouldReturnApplications() {
+        UUID userId = UUID.randomUUID();
+
+        when(repository.findActiveLoansByIdUser(userId))
+                .thenReturn(Flux.just(entity));
+        when(mapper.map(entity, Application.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findActiveLoansByIdUser(userId))
+                .expectNextMatches(application -> application.getId().equals(domain.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle empty results when finding active loans by user ID")
+    void findActiveLoansByIdUserShouldHandleEmptyResults() {
+        UUID userId = UUID.randomUUID();
+
+        when(repository.findActiveLoansByIdUser(userId))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(repositoryAdapter.findActiveLoansByIdUser(userId))
+                .expectNextCount(0)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findActiveLoansByIdUser fails")
+    void findActiveLoansByIdUserShouldPropagateRepositoryError() {
+        UUID userId = UUID.randomUUID();
+        RuntimeException error = new RuntimeException("DB activeLoans error");
+
+        when(repository.findActiveLoansByIdUser(userId))
+                .thenReturn(Flux.error(error));
+
+        StepVerifier.create(repositoryAdapter.findActiveLoansByIdUser(userId))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().equals("DB activeLoans error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should find applications by status and approved date range")
+    void findByStatusAndApprovedDateBetweenShouldReturnApplications() {
+        UUID statusId = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.now().minusDays(30);
+        LocalDateTime end = LocalDateTime.now();
+
+        when(repository.findByStatusAndApprovedDateBetween(statusId, start, end))
+                .thenReturn(Flux.just(entity));
+        when(mapper.map(entity, Application.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findByStatusAndApprovedDateBetween(statusId, start, end))
+                .expectNextMatches(application -> application.getId().equals(domain.getId()))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should handle empty results when finding applications by status and approved date range")
+    void findByStatusAndApprovedDateBetweenShouldHandleEmptyResults() {
+        UUID statusId = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.now().minusDays(30);
+        LocalDateTime end = LocalDateTime.now();
+
+        when(repository.findByStatusAndApprovedDateBetween(statusId, start, end))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(repositoryAdapter.findByStatusAndApprovedDateBetween(statusId, start, end))
+                .expectNextCount(0)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Should propagate error when repository findByStatusAndApprovedDateBetween fails")
+    void findByStatusAndApprovedDateBetweenShouldPropagateRepositoryError() {
+        UUID statusId = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.now().minusDays(30);
+        LocalDateTime end = LocalDateTime.now();
+        RuntimeException error = new RuntimeException("DB dateRange error");
+
+        when(repository.findByStatusAndApprovedDateBetween(statusId, start, end))
+                .thenReturn(Flux.error(error));
+
+        StepVerifier.create(repositoryAdapter.findByStatusAndApprovedDateBetween(statusId, start, end))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().equals("DB dateRange error"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("Should correctly set hasPrevious when current page is greater than 0")
+    void findByIdStatusInShouldSetHasPreviousTrue() {
+        List<UUID> statusIds = List.of(UUID.randomUUID());
+        List<ApplicationEntity> entityList = List.of(entity);
+        long totalCount = 10L;
+
+        CustomPageable customPageableWithPage = CustomPageable.builder()
+                .page(1)
+                .size(5)
+                .sortBy("id")
+                .sortDirection("asc")
+                .build();
+
+        Pageable pageable = PageRequest.of(customPageableWithPage.getPage(), customPageableWithPage.getSize(),
+                Sort.by(Sort.Direction.ASC, customPageableWithPage.getSortBy()));
+
+        when(repository.findByIdStatusIn(eq(statusIds), eq(pageable)))
+                .thenReturn(Flux.fromIterable(entityList));
+        when(repository.countByIdStatusIn(statusIds)).thenReturn(Mono.just(totalCount));
+        when(mapper.map(entity, Application.class)).thenReturn(domain);
+
+        StepVerifier.create(repositoryAdapter.findByIdStatusIn(statusIds, customPageableWithPage))
+                .expectNextMatches(CustomPage::isHasPrevious)
+                .verifyComplete();
+    }
+
 }

@@ -10,8 +10,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${services.auth.url}")
-    private String authServiceUrl;
+    private final String authServiceUrl;
+
+    public WebClientConfig (@Value("${services.auth.url}") String authServiceUrl) {
+        this.authServiceUrl = authServiceUrl;
+    }
 
     @Bean
     public WebClient authWebClient() {

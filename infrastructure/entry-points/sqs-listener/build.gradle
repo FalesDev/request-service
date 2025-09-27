@@ -5,4 +5,5 @@ dependencies {
     implementation 'software.amazon.awssdk:sqs'
     implementation 'org.apache.logging.log4j:log4j-api'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }

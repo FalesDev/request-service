@@ -81,7 +81,7 @@ class AuthServiceAdapterTest {
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/api/v1/users/document", recordedRequest.getPath());
+        assertEquals("/auth/api/v1/users/document", recordedRequest.getPath());
         assertEquals("Bearer " + token, recordedRequest.getHeader(HttpHeaders.AUTHORIZATION));
 
         UserValidationRequest requestBody = objectMapper.readValue(
@@ -120,7 +120,7 @@ class AuthServiceAdapterTest {
     }
 
     @Test
-    @DisplayName("validateClientUser should complete without error when response is other 4xx")
+    @DisplayName("validateClientUser should fail for other 4xx")
     void validateClientUser_Other4xxError() {
         String idDocument = "12345678";
 
@@ -128,11 +128,9 @@ class AuthServiceAdapterTest {
                 .setResponseCode(HttpStatus.BAD_REQUEST.value()));
 
         StepVerifier.create(authServiceAdapter.validateClientUser(idDocument, token))
-                .expectComplete()
+                .expectError()
                 .verify();
     }
-
-    // -------------------- foundClientByIds --------------------
 
     @Test
     @DisplayName("foundClientByIds should return users when response is successful")
@@ -169,7 +167,7 @@ class AuthServiceAdapterTest {
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("POST", recordedRequest.getMethod());
-        assertEquals("/api/v1/users/find", recordedRequest.getPath());
+        assertEquals("/auth/api/v1/users/find", recordedRequest.getPath());
         assertEquals("Bearer " + token, recordedRequest.getHeader(HttpHeaders.AUTHORIZATION));
 
         UsersFoundRequest requestBody = objectMapper.readValue(
@@ -208,7 +206,7 @@ class AuthServiceAdapterTest {
     }
 
     @Test
-    @DisplayName("foundClientByIds should complete without error when response is other 4xx")
+    @DisplayName("foundClientByIds should fail for other 4xx")
     void foundClientByIds_Other4xxError() {
         UUID userId = UUID.randomUUID();
 
@@ -216,7 +214,7 @@ class AuthServiceAdapterTest {
                 .setResponseCode(HttpStatus.BAD_REQUEST.value()));
 
         StepVerifier.create(authServiceAdapter.foundClientByIds(List.of(userId), token))
-                .expectComplete()
+                .expectError()
                 .verify();
     }
 }
