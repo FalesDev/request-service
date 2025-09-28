@@ -3,6 +3,7 @@ package co.com.pragma.api.exception;
 import co.com.pragma.model.exception.EntityNotFoundException;
 import co.com.pragma.model.exception.InvalidAmountException;
 import co.com.pragma.model.exception.TokenValidationException;
+import co.com.pragma.model.exception.UnauthorizedException;
 import co.com.pragma.model.gateways.CustomLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,6 +81,20 @@ public class GlobalExceptionHandlerTest {
                 .verifyComplete();
 
         verify(logger).warn(contains("Entity not found"));
+    }
+
+    @Test
+    @DisplayName("Should return 401 Unauthorized when UnauthorizedException is thrown")
+    void shouldHandleUnauthorizedException() {
+        UnauthorizedException ex = new UnauthorizedException("Authentication failed");
+
+        when(next.handle(any())).thenReturn(Mono.error(ex));
+
+        StepVerifier.create(handler.filter(mock(ServerRequest.class), next))
+                .expectNextMatches(response -> response.statusCode().value() == 401)
+                .verifyComplete();
+
+        verify(logger).warn(contains("Authentication failed"));
     }
 
     @Test
