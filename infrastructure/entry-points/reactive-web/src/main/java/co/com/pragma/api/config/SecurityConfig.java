@@ -40,9 +40,9 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
+                                "/request/swagger-ui.html",
+                                "/request/swagger-ui/**",
+                                "/request/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/test"

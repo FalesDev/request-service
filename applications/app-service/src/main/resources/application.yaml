@@ -65,3 +65,8 @@ queue:
 app:
   timezone: America/Lima
 
+springdoc:
+  swagger-ui:
+    path: /request/swagger-ui.html
+  api-docs:
+    path: /request/v3/api-docs
